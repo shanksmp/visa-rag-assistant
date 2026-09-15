@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Visa RAG Assistant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            background: #f5f6f8;
+            color: #1a1a1a;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 600;
+            margin: 0 0 6px 0;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        #question {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        #question:focus {
+            border-color: #2563eb;
+        }
+
+        #askBtn {
+            margin-top: 14px;
+            padding: 11px 28px;
+            font-size: 14px;
+            font-weight: 500;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        #askBtn:hover:not(:disabled) {
+            background: #1d4ed8;
+        }
+
+        #askBtn:disabled {
+            background: #bfdbfe;
+            cursor: not-allowed;
+        }
+
+        #loading {
+            margin-top: 20px;
+            color: #6b7280;
+            font-size: 14px;
+            display: none;
+        }
+
+        #answerCard {
+            margin-top: 20px;
+            display: none;
+        }
+
+        #answerCard .card {
+            font-size: 15px;
+            line-height: 1.65;
+        }
+
+        #answerCard .card p:first-child {
+            margin-top: 0;
+        }
+
+        #answerCard .card p:last-child {
+            margin-bottom: 0;
+        }
+
+        #answerCard .card strong {
+            color: #111827;
+        }
+
+        #answerCard .card ul, #answerCard .card ol {
+            padding-left: 20px;
+        }
+
+        .label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Visa RAG Assistant</h1>
+    <div class="subtitle">Ask a question about F-1 OPT / STEM OPT rules</div>
+</div>
+
+<div class="card">
+    <input type="text" id="question" placeholder="e.g. How many days of unemployment am I allowed during STEM OPT?" />
+    <button id="askBtn">Ask</button>
+</div>
+
+<div id="loading">Thinking...</div>
+
+<div id="answerCard">
+    <div class="label">Answer</div>
+    <div class="card" id="answer"></div>
+</div>
+
+<script>
+    const questionInput = document.getElementById('question');
+    const askBtn = document.getElementById('askBtn');
+    const answerCard = document.getElementById('answerCard');
+    const answerDiv = document.getElementById('answer');
+    const loadingDiv = document.getElementById('loading');
+
+    async function askQuestion() {
+        const question = questionInput.value.trim();
+        if (!question) return;
+
+        askBtn.disabled = true;
+        loadingDiv.style.display = 'block';
+        answerCard.style.display = 'none';
+
+        try {
+            const url = new URL('/api/ask', window.location.origin);
+            url.searchParams.set('question', question);
+
+            const response = await fetch(url);
+            const text = await response.text();
+
+            answerDiv.innerHTML = marked.parse(text);
+            answerCard.style.display = 'block';
+        } catch (err) {
+            answerDiv.innerHTML = '<p style="color:#dc2626">Error: ' + err.message + '</p>';
+            answerCard.style.display = 'block';
+        } finally {
+            askBtn.disabled = false;
+            loadingDiv.style.display = 'none';
+        }
+    }
+
+    askBtn.addEventListener('click', askQuestion);
+    questionInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') askQuestion();
+    });
+</script>
+</body>
+</html>
