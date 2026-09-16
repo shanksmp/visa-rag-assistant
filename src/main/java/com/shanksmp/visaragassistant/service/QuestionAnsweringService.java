@@ -28,7 +28,7 @@ public class QuestionAnsweringService {
     public String answer(String question) {
         SearchRequest searchRequest = SearchRequest.builder()
                 .query(question)
-                .topK(3)
+                .topK(5)
                 .build();
         List<Document> relevantChunks = vectorStore.similaritySearch(searchRequest);
 
